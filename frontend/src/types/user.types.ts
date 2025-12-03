@@ -1,4 +1,4 @@
-export interface User {
+export interface UserProfile {
   id: string;
   email: string;
   name: string;
@@ -14,20 +14,20 @@ export interface User {
   updated_at?: string;
 }
 
-export interface LoginCredentials {
+export interface CreateUserDto {
+  username: string;
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
 }
 
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  bikeType?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
+export interface UpdateUserDto {
+  email?: string;
+  name?: string;
+  avatar_url?: string;
+  bike_type?: string;
+  bike_model?: string;
+  bike_year?: number;
+  bike_mileage?: number;
 }

@@ -26,12 +26,12 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.login(credentials);
 
       // Store tokens
-      token.value = response.access_token;
-      refreshToken.value = response.refresh_token;
+      token.value = response.accessToken;
+      refreshToken.value = response.refreshToken;
       user.value = response.user;
 
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
+      localStorage.setItem('access_token', response.accessToken);
+      localStorage.setItem('refresh_token', response.refreshToken);
 
       router.push('/');
     } catch (err: any) {
@@ -96,13 +96,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       const response = await authApi.refreshToken(refreshToken.value);
 
-      token.value = response.access_token;
-      refreshToken.value = response.refresh_token;
+      token.value = response.accessToken;
 
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
+      localStorage.setItem('access_token', response.accessToken);
 
-      return response.access_token;
+      return response.accessToken;
     } catch (err) {
       await logout();
       throw err;
