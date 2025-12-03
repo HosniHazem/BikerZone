@@ -1,0 +1,88 @@
+classDiagram
+    class Video {
+        +ObjectId _id
+        +String title
+        +String description
+        +String url
+        +String thumbnail
+        +Number duration
+        +BikeType bikeType
+        +Category category
+        +Level level
+        +Number views
+        +String uploadedBy
+        +Date createdAt
+        +Date updatedAt
+        +incrementViews() void
+        +updateMetadata(data: object) void
+    }
+    
+    class BikeType {
+        <<enumeration>>
+        SPORT
+        CRUISER
+        TOURING
+        ADVENTURE
+        CUSTOM
+    }
+    
+    class Category {
+        <<enumeration>>
+        MAINTENANCE
+        REPAIR
+        RIDING
+        ACCESSORIES
+        CUSTOMIZATION
+    }
+    
+    class Level {
+        <<enumeration>>
+        BEGINNER
+        INTERMEDIATE
+        ADVANCED
+    }
+    
+    class VideoView {
+        +ObjectId _id
+        +ObjectId videoId
+        +String userId
+        +Date viewedAt
+        +Number watchDuration
+    }
+    
+    class VideosService {
+        -videoModel: Model
+        -cloudinaryService: CloudinaryService
+        -queueService: QueueService
+        +create(dto: CreateVideoDto, file: File) Video
+        +findAll(filters: VideoFiltersDto) Video[]
+        +findOne(id: string) Video
+        +update(id: string, dto: UpdateVideoDto) Video
+        +delete(id: string) void
+        +findRecommended(userId: string) Video[]
+        +trackView(videoId: string, userId: string) void
+    }
+    
+    class VideosController {
+        -videosService: VideosService
+        +upload(file: File, dto: CreateVideoDto) Response
+        +getAll(filters: VideoFiltersDto) Response
+        +getOne(id: string) Response
+        +update(id: string, dto: UpdateVideoDto) Response
+        +delete(id: string) Response
+        +getRecommended() Response
+    }
+    
+    class CloudinaryService {
+        +upload(file: File) CloudinaryResponse
+        +delete(publicId: string) void
+        +getUrl(publicId: string) string
+    }
+    
+    Video --> BikeType : has
+    Video --> Category : has
+    Video --> Level : has
+    Video "1" -- "0..*" VideoView : tracked by
+    VideosService --> Video : manages
+    VideosService --> CloudinaryService : uses
+    VideosController --> VideosService : uses

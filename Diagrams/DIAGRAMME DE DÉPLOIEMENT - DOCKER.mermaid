@@ -1,0 +1,65 @@
+graph TB
+    subgraph "Docker Host"
+        subgraph "Network: bikerzone_network"
+            subgraph "Frontend Container"
+                FrontendApp[Vue.js App<br/>Port 8080<br/>Vite Dev Server]
+            end
+            
+            subgraph "Backend Container"
+                BackendApp[NestJS API<br/>Port 3000<br/>Node.js 18]
+            end
+            
+            subgraph "PostgreSQL Container"
+                PostgresDB[(PostgreSQL 15<br/>Port 5432<br/>Internal: 5432<br/>External: 5433)]
+            end
+            
+            subgraph "MongoDB Container"
+                MongoDB[(MongoDB 6<br/>Port 27017<br/>Internal: 27017<br/>External: 27018)]
+            end
+            
+            subgraph "Redis Container"
+                RedisCache[(Redis 7<br/>Port 6379<br/>Internal: 6379<br/>External: 6380)]
+            end
+            
+            subgraph "Nginx Container"
+                NginxProxy[Nginx<br/>Reverse Proxy<br/>Port 80, 443]
+            end
+        end
+        
+        subgraph "Volumes"
+            PgData[postgres_data]
+            MongoData[mongodb_data]
+            RedisData[redis_data]
+            Uploads[uploads]
+        end
+    end
+    
+    subgraph "External Services"
+        Cloudinary[Cloudinary CDN]
+        SendGrid[SendGrid Email]
+        Twilio[Twilio SMS]
+        FCM[Firebase FCM]
+        GoogleMaps[Google Maps]
+    end
+    
+    User([User Browser]) -->|HTTP/HTTPS| NginxProxy
+    NginxProxy -->|Proxy Pass| FrontendApp
+    NginxProxy -->|Proxy Pass| BackendApp
+    
+    FrontendApp -->|REST API| BackendApp
+    FrontendApp -->|WebSocket| BackendApp
+    
+    BackendApp --> PostgresDB
+    BackendApp --> MongoDB
+    BackendApp --> RedisCache
+    
+    BackendApp -.->|Cloud API| Cloudinary
+    BackendApp -.->|Email API| SendGrid
+    BackendApp -.->|SMS API| Twilio
+    BackendApp -.->|Push API| FCM
+    BackendApp -.->|Maps API| GoogleMaps
+    
+    PostgresDB --> PgData
+    MongoDB --> MongoData
+    RedisCache --> RedisData
+    BackendApp --> Uploads

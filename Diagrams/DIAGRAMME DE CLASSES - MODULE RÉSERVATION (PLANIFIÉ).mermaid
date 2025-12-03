@@ -1,0 +1,96 @@
+classDiagram
+    class Garage {
+        +UUID id
+        +String name
+        +UUID ownerId
+        +String address
+        +Location location
+        +String phone
+        +String[] services
+        +Number rating
+        +Date createdAt
+        +calculateRating() number
+        +updateServices(services: string[]) void
+    }
+    
+    class Booking {
+        +UUID id
+        +UUID userId
+        +UUID garageId
+        +String service
+        +Date scheduledDate
+        +BookingStatus status
+        +String notes
+        +Date createdAt
+        +canModify() boolean
+        +cancel() void
+    }
+    
+    class BookingStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+    }
+    
+    class Review {
+        +UUID id
+        +UUID userId
+        +UUID garageId
+        +UUID bookingId
+        +Number rating
+        +String comment
+        +String[] photos
+        +Date createdAt
+        +isVerified() boolean
+    }
+    
+    class Service {
+        +UUID id
+        +UUID garageId
+        +String name
+        +String description
+        +Number price
+        +Number duration
+        +String[] bikeTypes
+    }
+    
+    class Location {
+        +Number latitude
+        +Number longitude
+        +calculateDistance(lat: number, lng: number) number
+    }
+    
+    class BookingsService {
+        -bookingRepository: Repository
+        -garageRepository: Repository
+        -emailService: EmailService
+        -smsService: SMSService
+        +create(userId: string, dto: CreateBookingDto) Booking
+        +findUserBookings(userId: string) Booking[]
+        +findGarageBookings(garageId: string) Booking[]
+        +update(id: string, dto: UpdateBookingDto) Booking
+        +cancel(id: string) void
+        +sendReminder(bookingId: string) void
+    }
+    
+    class GaragesService {
+        -garageRepository: Repository
+        -reviewRepository: Repository
+        +create(dto: CreateGarageDto) Garage
+        +findNearby(lat: number, lng: number, radius: number) Garage[]
+        +findOne(id: string) Garage
+        +addReview(dto: CreateReviewDto) Review
+        +getReviews(garageId: string) Review[]
+    }
+    
+    Garage "1" -- "0..*" Booking : receives
+    Garage "1" -- "0..*" Review : has
+    Garage "1" -- "0..*" Service : offers
+    Garage --> Location : has
+    Booking --> BookingStatus : has
+    BookingsService --> Booking : manages
+    GaragesService --> Garage : manages
+    GaragesService --> Review : manages

@@ -1,0 +1,59 @@
+flowchart TD
+    Start([Utilisateur démarre réservation]) --> SearchGarage[Rechercher garage]
+    SearchGarage --> EnterLocation{Méthode localisation?}
+    
+    EnterLocation -->|Adresse manuelle| ManualAddress[Saisir adresse]
+    EnterLocation -->|Géolocalisation| AutoLocation[Capturer position GPS]
+    
+    ManualAddress --> SearchResults[Afficher garages proches]
+    AutoLocation --> SearchResults
+    
+    SearchResults --> ApplyFilters{Appliquer filtres?}
+    ApplyFilters -->|Oui| FilterOptions[Services, Note, Distance]
+    ApplyFilters -->|Non| SelectGarage[Sélectionner garage]
+    FilterOptions --> SearchResults
+    
+    SelectGarage --> ViewDetails[Consulter détails garage]
+    ViewDetails --> CheckReviews{Lire avis?}
+    CheckReviews -->|Oui| ReadReviews[Afficher reviews]
+    CheckReviews -->|Non| SelectService[Choisir service]
+    ReadReviews --> SelectService
+    
+    SelectService --> ViewCalendar[Afficher calendrier]
+    ViewCalendar --> CheckAvailability{Créneau disponible?}
+    
+    CheckAvailability -->|Non| ViewCalendar
+    CheckAvailability -->|Oui| SelectDateTime[Sélectionner date/heure]
+    
+    SelectDateTime --> FillBikeInfo[Remplir infos moto]
+    FillBikeInfo --> AddNotes[Ajouter description problème]
+    AddNotes --> ReviewBooking[Récapitulatif réservation]
+    
+    ReviewBooking --> ConfirmBooking{Confirmer?}
+    ConfirmBooking -->|Non| SelectDateTime
+    ConfirmBooking -->|Oui| CheckAuth{Utilisateur authentifié?}
+    
+    CheckAuth -->|Non| Login[Connexion/Inscription]
+    Login --> ProcessBooking
+    CheckAuth -->|Oui| ProcessBooking[Créer réservation en DB]
+    
+    ProcessBooking --> SendConfirmations[Envoyer confirmations]
+    
+    SendConfirmations --> EmailConfirm[Email confirmation]
+    SendConfirmations --> SMSConfirm[SMS confirmation]
+    
+    EmailConfirm --> ScheduleReminders[Programmer rappels]
+    SMSConfirm --> ScheduleReminders
+    
+    ScheduleReminders --> Reminder24h[Rappel 24h avant]
+    ScheduleReminders --> Reminder2h[Rappel 2h avant]
+    
+    Reminder24h --> DisplayConfirmation[Afficher confirmation]
+    Reminder2h --> DisplayConfirmation
+    
+    DisplayConfirmation --> End([Fin - Réservation confirmée])
+    
+    style Start fill:#90EE90
+    style End fill:#90EE90
+    style ProcessBooking fill:#FFD700
+    style SendConfirmations fill:#FFD700

@@ -1,0 +1,82 @@
+classDiagram
+    class User {
+        +UUID id
+        +String email
+        +String passwordHash
+        +String firstName
+        +String lastName
+        +String phone
+        +String bikeBrand
+        +String bikeModel
+        +Integer bikeYear
+        +BikeType bikeType
+        +String profilePicture
+        +Boolean isVerified
+        +Date createdAt
+        +Date updatedAt
+        +validatePassword(password: string) boolean
+        +updateProfile(data: object) void
+        +deleteAccount() void
+    }
+    
+    class RefreshToken {
+        +UUID id
+        +UUID userId
+        +String token
+        +Date expiresAt
+        +Date createdAt
+        +isExpired() boolean
+        +revoke() void
+    }
+    
+    class AuthService {
+        -usersRepository: Repository
+        -jwtService: JwtService
+        -emailService: EmailService
+        +register(dto: RegisterDto) User
+        +login(dto: LoginDto) Tokens
+        +refreshToken(token: string) Tokens
+        +validateUser(email: string, password: string) User
+        +generateTokens(userId: UUID) Tokens
+        +hashPassword(password: string) string
+        +sendVerificationEmail(user: User) void
+    }
+    
+    class AuthController {
+        -authService: AuthService
+        +register(dto: RegisterDto) Response
+        +login(dto: LoginDto) Response
+        +refresh(token: string) Response
+        +logout(userId: UUID) Response
+        +getProfile(userId: UUID) Response
+    }
+    
+    class RegisterDto {
+        +String email
+        +String password
+        +String firstName
+        +String lastName
+        +validate() boolean
+    }
+    
+    class LoginDto {
+        +String email
+        +String password
+        +validate() boolean
+    }
+    
+    class JwtPayload {
+        +UUID sub
+        +String email
+        +String type
+        +Number iat
+        +Number exp
+    }
+    
+    User "1" -- "0..*" RefreshToken : has
+    AuthService --> User : manages
+    AuthService --> RefreshToken : manages
+    AuthController --> AuthService : uses
+    AuthController --> RegisterDto : receives
+    AuthController --> LoginDto : receives
+    AuthService --> JwtPayload : generates

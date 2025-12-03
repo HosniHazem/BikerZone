@@ -1,0 +1,84 @@
+classDiagram
+    class Post {
+        +ObjectId _id
+        +String authorId
+        +String content
+        +String[] images
+        +String[] hashtags
+        +Location location
+        +String[] likes
+        +Number likesCount
+        +Number commentsCount
+        +Date createdAt
+        +Date updatedAt
+        +addLike(userId: string) void
+        +removeLike(userId: string) void
+        +addComment() void
+        +extractHashtags() string[]
+    }
+    
+    class Comment {
+        +ObjectId _id
+        +ObjectId postId
+        +String authorId
+        +String content
+        +ObjectId parentCommentId
+        +Date createdAt
+        +isReply() boolean
+    }
+    
+    class Location {
+        +String type
+        +Number[] coordinates
+        +String address
+    }
+    
+    class Hashtag {
+        +String tag
+        +Number count
+        +Date lastUsed
+        +incrementCount() void
+    }
+    
+    class PostsService {
+        -postModel: Model
+        -commentModel: Model
+        -socketGateway: SocketGateway
+        -redisService: RedisService
+        +create(userId: string, dto: CreatePostDto) Post
+        +findAll(pagination: PaginationDto) Post[]
+        +findOne(id: string) Post
+        +update(id: string, dto: UpdatePostDto) Post
+        +delete(id: string) void
+        +likePost(postId: string, userId: string) Post
+        +createComment(postId: string, dto: CommentDto) Comment
+        +findByHashtag(tag: string) Post[]
+        +getTrendingHashtags() Hashtag[]
+    }
+    
+    class PostsController {
+        -postsService: PostsService
+        +create(dto: CreatePostDto) Response
+        +getAll(query: QueryDto) Response
+        +getOne(id: string) Response
+        +update(id: string, dto: UpdatePostDto) Response
+        +delete(id: string) Response
+        +like(id: string) Response
+        +comment(id: string, dto: CommentDto) Response
+        +searchByHashtag(tag: string) Response
+    }
+    
+    class SocketGateway {
+        -server: Server
+        +emitNewPost(post: Post) void
+        +emitLike(postId: string, count: number) void
+        +emitComment(comment: Comment) void
+    }
+    
+    Post "1" -- "0..*" Comment : has
+    Post --> Location : has
+    Post --> Hashtag : contains
+    PostsService --> Post : manages
+    PostsService --> Comment : manages
+    PostsService --> SocketGateway : uses
+    PostsController --> PostsService : uses

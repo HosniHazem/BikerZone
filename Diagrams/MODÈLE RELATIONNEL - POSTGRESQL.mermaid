@@ -1,0 +1,80 @@
+erDiagram
+    USERS ||--o{ REFRESH_TOKENS : has
+    USERS ||--o{ GARAGES : owns
+    USERS ||--o{ BOOKINGS : makes
+    USERS ||--o{ REVIEWS : writes
+    GARAGES ||--o{ SERVICES : offers
+    GARAGES ||--o{ BOOKINGS : receives
+    GARAGES ||--o{ REVIEWS : receives
+    BOOKINGS ||--o| REVIEWS : generates
+    
+    USERS {
+        uuid id PK
+        varchar email UK
+        varchar password_hash
+        varchar first_name
+        varchar last_name
+        varchar phone
+        varchar bike_brand
+        varchar bike_model
+        int bike_year
+        varchar bike_type
+        varchar profile_picture
+        boolean is_verified
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    REFRESH_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        varchar token UK
+        timestamp expires_at
+        timestamp created_at
+    }
+    
+    GARAGES {
+        uuid id PK
+        varchar name
+        uuid owner_id FK
+        text address
+        decimal latitude
+        decimal longitude
+        varchar phone
+        text[] services
+        decimal rating
+        timestamp created_at
+    }
+    
+    SERVICES {
+        uuid id PK
+        uuid garage_id FK
+        varchar name
+        text description
+        decimal price
+        int duration_minutes
+        varchar[] bike_types
+        timestamp created_at
+    }
+    
+    BOOKINGS {
+        uuid id PK
+        uuid user_id FK
+        uuid garage_id FK
+        varchar service
+        timestamp scheduled_date
+        varchar status
+        text notes
+        timestamp created_at
+    }
+    
+    REVIEWS {
+        uuid id PK
+        uuid user_id FK
+        uuid garage_id FK
+        uuid booking_id FK
+        int rating
+        text comment
+        varchar[] photos
+        timestamp created_at
+    }

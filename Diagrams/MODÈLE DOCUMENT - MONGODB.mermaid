@@ -1,0 +1,88 @@
+graph TB
+    subgraph "Collection: videos"
+        V1[_id: ObjectId]
+        V2[title: String]
+        V3[description: String]
+        V4[url: String]
+        V5[thumbnail: String]
+        V6[duration: Number]
+        V7[bikeType: Enum]
+        V8[category: Enum]
+        V9[level: Enum]
+        V10[views: Number]
+        V11[uploadedBy: String]
+        V12[createdAt: Date]
+    end
+    
+    subgraph "Collection: posts"
+        P1[_id: ObjectId]
+        P2[authorId: String]
+        P3[content: String]
+        P4["images: Array&lt;String&gt;"]
+        P5["hashtags: Array&lt;String&gt;"]
+        P6["location: Object"]
+        P7["likes: Array&lt;String&gt;"]
+        P8[likesCount: Number]
+        P9[commentsCount: Number]
+        P10[createdAt: Date]
+    end
+    
+    subgraph "Collection: comments"
+        C1[_id: ObjectId]
+        C2[postId: ObjectId]
+        C3[authorId: String]
+        C4[content: String]
+        C5[parentCommentId: ObjectId]
+        C6[createdAt: Date]
+    end
+    
+    subgraph "Collection: alerts"
+        A1[_id: ObjectId]
+        A2[reporterId: String]
+        A3[type: Enum]
+        A4[description: String]
+        A5["location: Object"]
+        A6[photo: String]
+        A7["validations: Object"]
+        A8[status: Enum]
+        A9[expiresAt: Date]
+        A10[createdAt: Date]
+    end
+    
+    V1 --> V2
+    V2 --> V3
+    V3 --> V4
+    V4 --> V5
+    V5 --> V6
+    V6 --> V7
+    V7 --> V8
+    V8 --> V9
+    V9 --> V10
+    V10 --> V11
+    V11 --> V12
+    
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+    P5 --> P6
+    P6 --> P7
+    P7 --> P8
+    P8 --> P9
+    P9 --> P10
+    
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    C5 --> C6
+    
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    A4 --> A5
+    A5 --> A6
+    A6 --> A7
+    A7 --> A8
+    A8 --> A9
+    A9 --> A10
