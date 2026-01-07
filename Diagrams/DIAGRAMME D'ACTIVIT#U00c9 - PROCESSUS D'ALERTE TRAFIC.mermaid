@@ -1,0 +1,63 @@
+flowchart TD
+    Start([Utilisateur signale alerte]) --> CheckLocation{GPS activé?}
+    
+    CheckLocation -->|Non| RequestPermission[Demander permission GPS]
+    RequestPermission --> PermissionGranted{Permission accordée?}
+    PermissionGranted -->|Non| ManualLocation[Entrer localisation manuelle]
+    PermissionGranted -->|Oui| CaptureLocation[Capturer coordonnées GPS]
+    CheckLocation -->|Oui| CaptureLocation
+    
+    ManualLocation --> SelectAlertType
+    CaptureLocation --> SelectAlertType[Sélectionner type alerte]
+    
+    SelectAlertType --> AlertTypeChoice{Type?}
+    AlertTypeChoice -->|Trafic| SetTraffic[Type: Traffic]
+    AlertTypeChoice -->|Police| SetPolice[Type: Police]
+    AlertTypeChoice -->|Accident| SetAccident[Type: Accident]
+    AlertTypeChoice -->|Danger| SetDanger[Type: Danger]
+    AlertTypeChoice -->|Travaux| SetRoadwork[Type: Roadwork]
+    
+    SetTraffic --> AddDetails
+    SetPolice --> AddDetails
+    SetAccident --> AddDetails
+    SetDanger --> AddDetails
+    SetRoadwork --> AddDetails[Ajouter description optionnelle]
+    
+    AddDetails --> AddPhoto{Ajouter photo?}
+    AddPhoto -->|Oui| TakePhoto[Capturer/Uploader photo]
+    AddPhoto -->|Non| SetExpiration
+    TakePhoto --> SetExpiration[Définir durée validité 2h]
+    
+    SetExpiration --> CreateAlert[Créer alerte en DB]
+    CreateAlert --> FindNearbyUsers[Identifier utilisateurs proches]
+    
+    FindNearbyUsers --> CalculateRadius[Rayon 5km]
+    CalculateRadius --> GetUserTokens[Récupérer tokens FCM]
+    
+    GetUserTokens --> SendNotifications[Envoyer notifications push]
+    SendNotifications --> UpdateMap[Actualiser carte temps réel]
+    
+    UpdateMap --> WebSocketBroadcast[Broadcast WebSocket]
+    WebSocketBroadcast --> DisplayOnMap[Afficher marqueur sur carte]
+    
+    DisplayOnMap --> MonitorAlert[Surveiller validations]
+    
+    MonitorAlert --> CheckValidations{Score validation?}
+    CheckValidations -->|Score > 5| KeepActive[Maintenir active]
+    CheckValidations -->|Score < -5| MarkRejected[Marquer rejetée]
+    CheckValidations -->|Score normal| Continue[Continuer]
+    
+    KeepActive --> CheckExpiration
+    MarkRejected --> RemoveFromMap[Retirer de carte]
+    Continue --> CheckExpiration{2h écoulées?}
+    
+    CheckExpiration -->|Non| MonitorAlert
+    CheckExpiration -->|Oui| ExpireAlert[Marquer expirée]
+    
+    ExpireAlert --> RemoveFromMap
+    RemoveFromMap --> End([Fin - Alerte traitée])
+    
+    style Start fill:#90EE90
+    style End fill:#90EE90
+    style CreateAlert fill:#FFD700
+    style SendNotifications fill:#FFD700

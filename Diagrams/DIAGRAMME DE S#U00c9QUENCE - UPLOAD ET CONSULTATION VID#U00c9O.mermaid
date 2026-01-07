@@ -1,0 +1,56 @@
+sequenceDiagram
+    actor Admin as Administrateur
+    actor User as Utilisateur
+    participant UI as Frontend
+    participant API as Backend API
+    participant Videos as Videos Service
+    participant MongoDB as MongoDB
+    participant Queue as Bull Queue
+    participant FFmpeg as FFmpeg Worker
+    participant Cloud as Cloudinary
+    
+    Note over Admin,Cloud: Upload Vidéo
+    
+    Admin->>UI: Sélectionne fichier vidéo
+    UI->>API: POST /api/videos (multipart)
+    API->>Videos: create(file, metadata)
+    Videos->>Cloud: Upload vidéo brute
+    Cloud-->>Videos: URL + public_id
+    Videos->>Queue: Ajouter job transcoding
+    Videos->>MongoDB: Sauvegarder métadonnées
+    MongoDB-->>Videos: Vidéo créée
+    Videos-->>API: {video, status: 'processing'}
+    API-->>UI: 201 Created
+    UI-->>Admin: Upload réussi, transcoding en cours
+    
+    Queue->>FFmpeg: Process transcoding job
+    FFmpeg->>Cloud: Télécharger vidéo
+    FFmpeg->>FFmpeg: Transcodage (720p, 480p)
+    FFmpeg->>FFmpeg: Génération miniature
+    FFmpeg->>Cloud: Upload versions
+    Cloud-->>FFmpeg: URLs versions
+    FFmpeg->>MongoDB: UPDATE status='ready', urls
+    MongoDB-->>FFmpeg: MAJ réussie
+    FFmpeg-->>Queue: Job completed
+    
+    Note over Admin,Cloud: Consultation Vidéo
+    
+    User->>UI: Accède bibliothèque vidéos
+    UI->>API: GET /api/videos?filter=...
+    API->>Videos: findAll(filters)
+    Videos->>MongoDB: FIND videos WHERE...
+    MongoDB-->>Videos: Liste vidéos
+    Videos-->>API: {videos[], total, page}
+    API-->>UI: 200 OK + données
+    UI-->>User: Affiche grille vidéos
+    
+    User->>UI: Clique sur vidéo
+    UI->>API: GET /api/videos/:id
+    API->>Videos: findOne(id)
+    Videos->>MongoDB: FIND video WHERE _id
+    MongoDB-->>Videos: Vidéo complète
+    Videos->>Videos: Incrémenter views
+    Videos->>MongoDB: UPDATE views++
+    Videos-->>API: {video, relatedVideos[]}
+    API-->>UI: 200 OK + vidéo
+    UI-->>User: Lecteur vidéo + infos

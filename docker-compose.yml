@@ -1,0 +1,151 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bikerzone_postgres
+    environment:
+      POSTGRES_USER: bikerzone
+      POSTGRES_PASSWORD: biker_secure_2024
+      POSTGRES_DB: bikerzone
+    ports:
+      - "5433:5432"  # Changed to 5433 to avoid conflict
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bikerzone_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bikerzone"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:6
+    container_name: bikerzone_mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: bikerzone
+      MONGO_INITDB_ROOT_PASSWORD: mongo_secure_2024
+      MONGO_INITDB_DATABASE: bikerzone_social
+    ports:
+      - "27018:27017"  # Changed to 27018 to avoid conflict
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bikerzone_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: bikerzone_redis
+    command: redis-server --requirepass redis_secure_2024
+    ports:
+      - "6380:6379"  # Changed to 6380 to avoid conflict
+    volumes:
+      - redis_data:/data
+    networks:
+      - bikerzone_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bikerzone_api
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Database
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: bikerzone
+      DATABASE_PASSWORD: biker_secure_2024
+      DATABASE_NAME: bikerzone
+      # MongoDB
+      MONGODB_URI: mongodb://bikerzone:mongo_secure_2024@mongodb:27017/bikerzone_social?authSource=admin
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis_secure_2024
+      # JWT
+      JWT_SECRET: bikerzone_jwt_secret_key_2024_very_secure
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_SECRET: bikerzone_refresh_secret_key_2024_very_secure
+      JWT_REFRESH_EXPIRATION: 7d
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      # SendGrid
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      FROM_EMAIL: noreply@bikerzone.com
+      # FCM
+      FCM_SERVER_KEY: ${FCM_SERVER_KEY:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bikerzone_network
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bikerzone_frontend
+    environment:
+      VITE_API_URL: http://localhost:3000/api/v1
+      VITE_WS_URL: ws://localhost:3000
+      VITE_GOOGLE_MAPS_KEY: ${GOOGLE_MAPS_API_KEY:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend/src:/app/src:ro
+    networks:
+      - bikerzone_network
+
+  # PgAdmin (Development only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: bikerzone_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@bikerzone.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - bikerzone_network
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  uploads:
+
+networks:
+  bikerzone_network:
+    driver: bridge

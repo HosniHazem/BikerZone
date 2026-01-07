@@ -1,0 +1,62 @@
+sequenceDiagram
+    actor User1 as Utilisateur 1
+    actor User2 as Utilisateur 2
+    participant UI1 as Frontend 1
+    participant UI2 as Frontend 2
+    participant API as Backend API
+    participant Posts as Posts Service
+    participant Socket as Socket Gateway
+    participant MongoDB as MongoDB
+    participant Redis as Redis Cache
+    
+    Note over User1,Redis: Création de Post
+    
+    User1->>UI1: Rédige post + upload images
+    UI1->>API: POST /api/posts
+    API->>Posts: create(userId, content, images)
+    Posts->>Posts: Extraire hashtags
+    Posts->>MongoDB: INSERT INTO posts
+    MongoDB-->>Posts: Post créé (_id)
+    Posts->>Redis: LPUSH feed:recent (post_id)
+    Posts->>Socket: emit('new_post', post)
+    Socket-->>UI1: new_post event
+    Socket-->>UI2: new_post event
+    Posts-->>API: {post}
+    API-->>UI1: 201 Created
+    UI1-->>User1: Post publié
+    UI2-->>User2: Nouveau post affiché (temps réel)
+    
+    Note over User1,Redis: Like Post
+    
+    User2->>UI2: Clique sur bouton Like
+    UI2->>API: POST /api/posts/:id/like
+    API->>Posts: likePost(postId, userId)
+    Posts->>MongoDB: FIND post WHERE _id
+    MongoDB-->>Posts: Post trouvé
+    Posts->>Posts: Ajouter userId à likes[]
+    Posts->>Posts: Incrémenter likesCount
+    Posts->>MongoDB: UPDATE post
+    MongoDB-->>Posts: MAJ réussie
+    Posts->>Socket: emit('post_liked', {postId, count})
+    Socket-->>UI1: post_liked event
+    Socket-->>UI2: post_liked event
+    Posts-->>API: {post, likesCount}
+    API-->>UI2: 200 OK
+    UI1->>UI1: MAJ compteur likes (temps réel)
+    UI2->>UI2: MAJ compteur likes
+    
+    Note over User1,Redis: Commenter Post
+    
+    User2->>UI2: Rédige commentaire
+    UI2->>API: POST /api/posts/:id/comments
+    API->>Posts: createComment(postId, userId, content)
+    Posts->>MongoDB: INSERT INTO comments
+    MongoDB-->>Posts: Commentaire créé
+    Posts->>MongoDB: UPDATE post.commentsCount++
+    Posts->>Socket: emit('new_comment', comment)
+    Socket-->>UI1: new_comment event
+    Socket-->>UI2: new_comment event
+    Posts-->>API: {comment}
+    API-->>UI2: 201 Created
+    UI1->>UI1: Afficher nouveau commentaire
+    UI2->>UI2: Afficher commentaire

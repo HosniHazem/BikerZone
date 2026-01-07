@@ -1,0 +1,68 @@
+graph TB
+    subgraph "Frontend - Vue.js 3"
+        UI[Interface Utilisateur]
+        VueRouter[Vue Router]
+        Pinia[Pinia Store]
+        Axios[Axios HTTP Client]
+    end
+    
+    subgraph "Backend - NestJS"
+        API[API Gateway]
+        AuthModule[Auth Module]
+        UsersModule[Users Module]
+        VideosModule[Videos Module]
+        PostsModule[Posts Module]
+        AlertsModule[Alerts Module]
+        BookingsModule[Bookings Module]
+        SocketGateway[WebSocket Gateway]
+    end
+    
+    subgraph "Bases de Données"
+        PostgreSQL[(PostgreSQL)]
+        MongoDB[(MongoDB)]
+        Redis[(Redis Cache)]
+    end
+    
+    subgraph "Services Externes"
+        Cloudinary[Cloudinary CDN]
+        SendGrid[SendGrid Email]
+        Twilio[Twilio SMS]
+        FCM[Firebase FCM]
+        GoogleMaps[Google Maps API]
+    end
+    
+    UI --> VueRouter
+    VueRouter --> Pinia
+    Pinia --> Axios
+    Axios -->|REST API| API
+    Axios -->|WebSocket| SocketGateway
+    
+    API --> AuthModule
+    API --> UsersModule
+    API --> VideosModule
+    API --> PostsModule
+    API --> AlertsModule
+    API --> BookingsModule
+    
+    AuthModule --> PostgreSQL
+    UsersModule --> PostgreSQL
+    VideosModule --> MongoDB
+    PostsModule --> MongoDB
+    AlertsModule --> MongoDB
+    BookingsModule --> PostgreSQL
+    
+    AuthModule --> Redis
+    PostsModule --> Redis
+    
+    VideosModule --> Cloudinary
+    AuthModule --> SendGrid
+    BookingsModule --> SendGrid
+    BookingsModule --> Twilio
+    AlertsModule --> FCM
+    AlertsModule --> GoogleMaps
+    
+    style UI fill:#4FC3F7
+    style API fill:#66BB6A
+    style PostgreSQL fill:#336791
+    style MongoDB fill:#47A248
+    style Redis fill:#DC382D

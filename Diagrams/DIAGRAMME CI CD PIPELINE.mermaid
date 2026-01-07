@@ -1,0 +1,58 @@
+flowchart LR
+    subgraph "Developer"
+        Dev[Développeur] -->|git push| GitRepo[GitHub Repository]
+    end
+    
+    subgraph "GitHub Actions"
+        GitRepo -->|Trigger| Workflow[Workflow CI/CD]
+        
+        Workflow --> Checkout[Checkout Code]
+        Checkout --> SetupNode[Setup Node.js 18]
+        
+        SetupNode --> InstallDeps[Install Dependencies]
+        InstallDeps --> Lint[ESLint + Prettier]
+        
+        Lint --> RunTests[Run Tests]
+        RunTests --> UnitTests[Unit Tests Jest]
+        RunTests --> IntegrationTests[Integration Tests]
+        
+        UnitTests --> Coverage[Code Coverage]
+        IntegrationTests --> Coverage
+        
+        Coverage --> CheckCoverage{Coverage > 80%?}
+        CheckCoverage -->|No| FailPipeline[❌ Pipeline Failed]
+        CheckCoverage -->|Yes| BuildDocker[Build Docker Images]
+        
+        BuildDocker --> Backend[Backend Image]
+        BuildDocker --> Frontend[Frontend Image]
+        
+        Backend --> TagImages[Tag Images]
+        Frontend --> TagImages
+        
+        TagImages --> CheckBranch{Branch?}
+        
+        CheckBranch -->|develop| DeployStaging[Deploy to Staging]
+        CheckBranch -->|main| DeployProd[Deploy to Production]
+        CheckBranch -->|feature/*| SkipDeploy[Skip Deployment]
+        
+        DeployStaging --> RunSmokeTests[Smoke Tests Staging]
+        DeployProd --> RunSmokeTests
+        
+        RunSmokeTests --> Success[✅ Pipeline Success]
+        
+        FailPipeline --> Notify[Notification Slack/Email]
+        Success --> Notify
+    end
+    
+    subgraph "Docker Registry"
+        TagImages -.->|Push| Registry[Docker Hub/ECR]
+    end
+    
+    subgraph "Deployment Environments"
+        DeployStaging --> StagingEnv[Staging Server]
+        DeployProd --> ProdEnv[Production Server]
+    end
+    
+    style Success fill:#90EE90
+    style FailPipeline fill:#FF6B6B
+    style BuildDocker fill:#FFD700

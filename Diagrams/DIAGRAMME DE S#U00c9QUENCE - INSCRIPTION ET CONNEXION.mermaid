@@ -1,0 +1,39 @@
+sequenceDiagram
+    actor User as Utilisateur
+    participant UI as Frontend
+    participant API as Backend API
+    participant Auth as Auth Service
+    participant DB as PostgreSQL
+    participant Email as SendGrid
+    
+    Note over User,Email: Processus d'Inscription
+    
+    User->>UI: Remplit formulaire inscription
+    UI->>API: POST /api/auth/register
+    API->>Auth: register(dto)
+    Auth->>Auth: Valider données
+    Auth->>Auth: Hasher mot de passe (bcrypt)
+    Auth->>DB: INSERT INTO users
+    DB-->>Auth: User créé
+    Auth->>Email: Envoyer email confirmation
+    Email-->>Auth: Email envoyé
+    Auth-->>API: {user, message}
+    API-->>UI: 201 Created
+    UI-->>User: Message de succès
+    
+    Note over User,Email: Processus de Connexion
+    
+    User->>UI: Saisit email/password
+    UI->>API: POST /api/auth/login
+    API->>Auth: login(credentials)
+    Auth->>DB: SELECT * FROM users WHERE email
+    DB-->>Auth: User trouvé
+    Auth->>Auth: Comparer password (bcrypt)
+    Auth->>Auth: Générer access token (15min)
+    Auth->>Auth: Générer refresh token (7j)
+    Auth->>DB: INSERT INTO refresh_tokens
+    DB-->>Auth: Token sauvegardé
+    Auth-->>API: {accessToken, refreshToken}
+    API-->>UI: 200 OK + tokens
+    UI->>UI: Stocker tokens (httpOnly cookies)
+    UI-->>User: Redirection dashboard

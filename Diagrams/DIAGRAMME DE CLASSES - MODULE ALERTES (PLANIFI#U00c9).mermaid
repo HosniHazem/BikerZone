@@ -1,0 +1,81 @@
+classDiagram
+    class Alert {
+        +ObjectId _id
+        +String reporterId
+        +AlertType type
+        +String description
+        +Location location
+        +String photo
+        +Validation validations
+        +AlertStatus status
+        +Date expiresAt
+        +Date createdAt
+        +addValidation(userId: string, vote: boolean) void
+        +isExpired() boolean
+        +calculateReliability() number
+    }
+    
+    class AlertType {
+        <<enumeration>>
+        TRAFFIC
+        POLICE
+        ACCIDENT
+        DANGER
+        ROADWORK
+    }
+    
+    class AlertStatus {
+        <<enumeration>>
+        ACTIVE
+        EXPIRED
+        VALIDATED
+        REJECTED
+        DELETED
+    }
+    
+    class Location {
+        +String type
+        +Number[] coordinates
+        +String address
+        +Number radius
+    }
+    
+    class Validation {
+        +Number upvotes
+        +Number downvotes
+        +String[] voters
+        +calculateScore() number
+    }
+    
+    class AlertsService {
+        -alertModel: Model
+        -fcmService: FCMService
+        -socketGateway: SocketGateway
+        +create(userId: string, dto: CreateAlertDto) Alert
+        +findNearby(lat: number, lng: number, radius: number) Alert[]
+        +findOne(id: string) Alert
+        +validate(id: string, userId: string, vote: boolean) Alert
+        +expireOldAlerts() void
+        +notifyNearbyUsers(alert: Alert) void
+    }
+    
+    class AlertsController {
+        -alertsService: AlertsService
+        +create(dto: CreateAlertDto) Response
+        +getNearby(query: LocationQuery) Response
+        +getOne(id: string) Response
+        +validate(id: string, vote: boolean) Response
+    }
+    
+    class FCMService {
+        +sendNotification(token: string, data: object) void
+        +sendToMultiple(tokens: string[], data: object) void
+    }
+    
+    Alert --> AlertType : has
+    Alert --> AlertStatus : has
+    Alert --> Location : has
+    Alert --> Validation : has
+    AlertsService --> Alert : manages
+    AlertsService --> FCMService : uses
+    AlertsController --> AlertsService : uses

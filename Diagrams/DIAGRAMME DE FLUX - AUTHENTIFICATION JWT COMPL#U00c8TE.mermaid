@@ -1,0 +1,61 @@
+flowchart TD
+    Start([Utilisateur non connecté]) --> OpenApp[Ouvrir application]
+    OpenApp --> CheckToken{Token existe?}
+    
+    CheckToken -->|Non| ShowLogin[Afficher page login]
+    CheckToken -->|Oui| ValidateToken{Token valide?}
+    
+    ValidateToken -->|Oui| LoadDashboard[Charger dashboard]
+    ValidateToken -->|Non| CheckRefresh{Refresh token valide?}
+    
+    CheckRefresh -->|Non| ShowLogin
+    CheckRefresh -->|Oui| RefreshAccess[Générer nouveau access token]
+    RefreshAccess --> LoadDashboard
+    
+    ShowLogin --> UserLogin[Utilisateur se connecte]
+    UserLogin --> SendCredentials[POST /api/auth/login]
+    SendCredentials --> ValidateCredentials{Credentials valides?}
+    
+    ValidateCredentials -->|Non| ShowError[Afficher erreur]
+    ShowError --> ShowLogin
+    ValidateCredentials -->|Oui| GenerateTokens[Générer access + refresh tokens]
+    
+    GenerateTokens --> StoreTokens[Stocker tokens httpOnly cookies]
+    StoreTokens --> SaveRefreshDB[Sauvegarder refresh token DB]
+    SaveRefreshDB --> LoadDashboard
+    
+    LoadDashboard --> UserAction[Utilisateur effectue action]
+    UserAction --> APIRequest[Requête API avec access token]
+    
+    APIRequest --> ValidateAccess{Access token valide?}
+    ValidateAccess -->|Oui| ProcessRequest[Traiter requête]
+    ValidateAccess -->|Non| TokenExpired{Token expiré?}
+    
+    TokenExpired -->|Oui| AutoRefresh[Auto-refresh en arrière-plan]
+    TokenExpired -->|Non| Unauthorized[401 Unauthorized]
+    
+    AutoRefresh --> RefreshEndpoint[POST /api/auth/refresh]
+    RefreshEndpoint --> CheckRefreshDB{Refresh token en DB?}
+    
+    CheckRefreshDB -->|Non| Logout[Déconnexion forcée]
+    CheckRefreshDB -->|Oui| RefreshNotExpired{Pas expiré?}
+    
+    RefreshNotExpired -->|Non| Logout
+    RefreshNotExpired -->|Oui| NewTokens[Nouveaux tokens générés]
+    
+    NewTokens --> RotateRefresh[Rotation refresh token]
+    RotateRefresh --> RetryRequest[Retry requête originale]
+    RetryRequest --> ProcessRequest
+    
+    ProcessRequest --> Response[Réponse API]
+    Response --> UserAction
+    
+    Unauthorized --> ShowLogin
+    Logout --> ClearTokens[Supprimer tokens]
+    ClearTokens --> DeleteRefreshDB[Supprimer refresh DB]
+    DeleteRefreshDB --> ShowLogin
+    
+    style Start fill:#90EE90
+    style LoadDashboard fill:#4FC3F7
+    style ProcessRequest fill:#66BB6A
+    style Logout fill:#FF6B6B
